@@ -1,5 +1,4 @@
 let canvas;
-let count = 1;
 const BLACK = '#2a2a2a';
 const GOLD = '#ffb94e';
 const W = 128;
@@ -164,10 +163,8 @@ function mousePressed() {
   const daddy = population[population.length - 1];
   
   if (mommy) {
-    count += 1;
     mommy.fitness += 1;
     population.push(evolveMonster(mommy, daddy));
-    // drawMonster((count % 4) * W, Math.floor(count / 4) * W, population[population.length - 1]);
     resetMatrix();
     clear();
     draw();
