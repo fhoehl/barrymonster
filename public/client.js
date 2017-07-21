@@ -1,16 +1,18 @@
 let canvas;
 const BLACK = '#2a2a2a';
 const GOLD = '#ffb94e';
-const W = 128;
+const CANVAS_W = 672 / 2;
+const W = CANVAS_W / 3;
+const CANVAS_H = 5 * W;
 const W2 = W / 2;
 const W4 = W / 4;
 const W8 = W / 8;
 const W16 = W / 16;
-const population = [];
+let population = [];
 const fitnessColor = chroma.scale([BLACK, GOLD])
                            .mode('lab')
                            .correctLightness(true);
-
+let previous = null;
 
 function drawEyes(x, inner, outer, color) {  
   noFill();
@@ -84,8 +86,8 @@ function drawMonster(x, y, genotype) {
     }
   }
     
-  // const color = fitnessColor(genotype.fitness / best.fitness).hex();
-  const color = BLACK;
+  const color = fitnessColor(genotype.fitness / 15).hex();
+  //let color = BLACK;
   
   drawEyes(eyePosition, genotype.innerEyeDiameter, genotype.outerEyeDiameter, color);
   drawNose(nosePosition, genotype.noseHeight, genotype.noseWidth, color);
@@ -127,30 +129,28 @@ function evolveMonster(mommy, daddy) {
     
     if (parentBalance < 0.6) {
       monster[gene] = mommy[gene];
-    } else if (parentBalance < 0.9) {
+    } else if (parentBalance < 0.8) {
       monster[gene] = daddy[gene];
     }
   }
-  console.log('lala', mommy.fitness)
-  monster.fitness = mommy.fitness;
+
+  monster.fitness = (mommy.fitness + daddy.fitness) / 2;
   
   return monster;
 }
 
 function setup() {
-  canvas = createCanvas(512, 512);
+  canvas = createCanvas(CANVAS_W, CANVAS_H);
   canvas.parent('sketch');
   noLoop();
-  
   background('#fafafa');
-  
   population.push(randomMonster());
   population.push(randomMonster());
 }
 
 function draw() {
   for (let i = 0; i < population.length; i += 1) {
-    drawMonster((i % 4) * W, Math.floor(i / 4) * W, population[i]);
+    drawMonster((i % 3) * W, Math.floor(i / 3) * W, population[i]);
   }
 }
 
@@ -159,19 +159,45 @@ function mousePressed() {
   const i = Math.floor(mouseX / grid); 
   const j = Math.floor(mouseY / grid);
   
-  const mommy = population[i + (j * 4)];
-  const daddy = population[population.length - 1];
+  const mommy = population[i + (j * 3)];
+  let daddy;
   
   if (mommy) {
+    
+    if (!previous) {
+      daddy = population[population.length - 1];
+    } else {
+      daddy = previous;
+    }    
+    
     mommy.fitness += 1;
     population.push(evolveMonster(mommy, daddy));
+    
     resetMatrix();
     clear();
+    background('#fafafa');
     draw();
+    
+    previous = mommy;
   }
 }
 
 const exportBtn = document.getElementById('export');
+
 exportBtn.addEventListener('click', function (event) {
   saveCanvas('barry', 'png');
 });
+
+const resetBtn = document.getElementById('reset');
+
+resetBtn.addEventListener('click', function (event) {
+  
+  population = [];
+  population.push(randomMonster());
+  population.push(randomMonster());
+  
+  resetMatrix();
+  clear();
+  background('#fafafa');
+  draw();
+}); 
